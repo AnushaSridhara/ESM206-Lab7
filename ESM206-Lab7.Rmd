@@ -1,0 +1,162 @@
+---
+title: "Lab7 - Multiple Linear Regression"
+author: "Anusha Sridhara"
+date: "11/8/2021"
+output: html_document
+---
+
+```{r setup, include=TRUE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning=FALSE)
+
+# Attach packages
+library(tidyverse)
+library(palmerpenguins)
+library(GGally)
+library(broom)
+library(kableExtra)
+library(modelsummary)
+library(stargazer)
+```
+
+## Intro to ggpairs
+
+Use GGally ::ggpairs()function to create a pairs plot
+```{r}
+ggpairs(penguins)
+```
+
+```{r}
+penguins %>% 
+  select(species, bill_length_mm:body_mass_g) %>% 
+  ggpairs(aes(color=species))
+
+ggplot(data=penguins, aes( x= bill_depth_mm, y=body_mass_g, group=species))+
+  geom_point(aes(color=species))+
+  geom_smooth=(method = "lm")
+```
+
+## Multiple Linear Regression - Penguins
+
+Use multiple linear regression to try to understand the relationship between multiple predictor variables and a single continuous outcome variable (body mass)
+
+```{r}
+penguin_lm <- lm(body_mass_g~ flipper_length_mm + bill_depth_mm, data=penguins) # two predictor variables
+
+# Return just the coefficients:
+penguin_lm
+```
+How would you interpret this coefficient for flipper_length_mm?
+
+we would expect, on average, a 51.54 gram increase in penguin body mass for each 1 mm increase in flipper length, if everything is constant
+
+we would expect, on average, a 22.63 gms increase in penguin body mass for each 1 mm increase in bill_depth, if everything else is constant
+
+Use 'summary()' function to get more information
+```{r}
+summary(penguin_lm)
+```
+Adjusted R-squared means : 76% of variance in penguin body mass is explained by the above variables. There is still 24% variance that is not explained by the variables in the model
+
+P-value - significant 
+
+### Use 'broom' function tidy and glance
+
+Use broom :: tidy to get the coefficient summary in a data frame
+Use broom :: glannce to get the model summary in a data frame
+
+```{r}
+penguin_lm_tidy <- tidy(penguin_lm)
+penguin_lm_tidy
+```
+
+Try using in-line code to refer to the bill depth coefficient 
+
+```{r}
+penguin_lm_tidy $ estimate[3]
+```
+
+```{r}
+penguin_lm_glance <- glance(penguin_lm)
+
+penguin_lm_glance
+```
+
+## Try another model
+
+We have thought really hard, done a literature review, consulted with experts, deeply explored our data and decided that the three most critical variables to include in this model (with body mass as the outcome variable) are:
+
+- flipper length
+- species
+- sex
+
+Task : create a multiple linear regression model using those 3 predictor variables
+
+Then take a look at the model outputs and interpret the coeeficients with a neighbour
+
+```{r}
+penguin_lm_2 <- lm(body_mass_g ~ flipper_length_mm + species + sex, data = penguins)
+
+penguin_lm_2
+```
+Reference level here is Adele
+we expect a gentoo penguin to weigh 836.26 gms more than an adele penguin
+we expect a chinstrap penguin to be 20.02 mm longer than an adele penguin
+we expect a male penguin to weigh 530.38 gms more than a female penguin
+
+### Use broom :: augment() to see predicted values
+
+```{r}
+augment(penguin_lm_2) # can also use predict function to see predicted values but I don't know how to use it yet
+```
+
+## Use plot() to look at model diagnostics
+
+```{r}
+plot(penguin_lm_2) 
+```
+# Interpretation - 2nd graph shows that the residuals are normally distributed
+
+- Conceptual understanding and expertise allows me to responsibly determine that penguin species, sex and flipper length are reasonable predictor variable (make sure you are thinking hard about variables and different variable combinations)
+- Diagnostic plts all check out for narmality of residuals, homoscedasticity, and no worrisome outliers (<< last one in not an assumption)
+Often times more than two models that are used to test the models and outputs 
+
+## Make output tables
+can use kable extra or stargazer
+```{r}
+modelsummary(penguin_lm_2)
+```
+
+Using stargazer:
+
+```{r, results= "asis"}
+stargazer(penguin_lm_2, type = "html")
+```
+
+
+
+
+
+
+
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
